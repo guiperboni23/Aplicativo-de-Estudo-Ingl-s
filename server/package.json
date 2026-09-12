@@ -1,0 +1,13 @@
+{
+  "name": "speakup-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Servidor local opcional do Speak Up: serve o app e conversa com a API da Anthropic.",
+  "scripts": {
+    "start": "node proxy.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0"
+  }
+}
