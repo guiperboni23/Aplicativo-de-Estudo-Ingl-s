@@ -252,8 +252,14 @@ details.model p { margin: 6px 0 0; font-style: italic; }
   border: 1px solid var(--line); white-space: pre-wrap; word-break: break-word;
 }
 .msg.me .bubble { background: var(--green-deep); border-color: rgba(30, 232, 122, 0.3); }
+.msg .btn { justify-self: start; padding: 5px 12px; font-size: 13px; border-bottom-width: 2px; }
 .bubble.system { background: transparent; border-style: dashed; color: var(--muted); font-size: 13px; }
 .composer { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+
+.partner { display: flex; align-items: center; gap: 10px; }
+.partner .flag { font-size: 26px; }
+.partner b { font-family: 'Fredoka', sans-serif; font-size: 15px; display: block; }
+.partner p { margin: 0; font-size: 12px; color: var(--muted); }
 
 .switch { display: flex; gap: 6px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
 .switch button { flex: 1; border-radius: 999px; padding: 8px 12px; color: var(--muted); font-weight: 500; font-size: 14px; }

@@ -1,18 +1,19 @@
 // Conversa livre: mesma tela para falar ou escrever, com correção na hora.
 
 import { esc, $, pick } from '../utils.js';
-import { analyze } from '../corrector/engine.js';
+import { analyze, FORMAT_RULES } from '../corrector/engine.js';
 import { getState, recordAttempt, cefr, setSetting } from '../state.js';
-import { SCENARIOS, scenariosForLevel, WRITING_PROMPTS, forLevel } from '../lessons.js';
+import { SCENARIOS, TOPICS, scenariosForLevel, WRITING_PROMPTS, forLevel } from '../lessons.js';
 import { openingLine, respond } from '../tutor.js';
 import { asrSupported, createRecognizer, speak, stopSpeaking } from '../speech.js';
-import { aiConfigured, aiTurn } from '../ai.js';
+import { aiConfigured, aiReply } from '../ai.js';
 
 export function createChatView() {
   let root;
   let log;
   let mode = 'voice';
-  let scenario = null;
+  let scenario = null;      // situação escolhida (tutor offline)
+  let topic = TOPICS[0];    // assunto do bate-papo com o nativo
   let turnIndex = 0;
   let history = [];
   let recognizer = null;
@@ -36,6 +37,17 @@ export function createChatView() {
     if (settings().autoSpeak) speak(text, voiceOpts());
   }
 
+  function showTyping(on) {
+    const old = $('.js-typing', root);
+    if (old) old.remove();
+    if (!on) return;
+    const node = document.createElement('div');
+    node.className = 'msg tutor js-typing';
+    node.innerHTML = '<div class="bubble system">Alex está pensando…</div>';
+    log.appendChild(node);
+    scrollDown();
+  }
+
   function addSystem(text) {
     const node = document.createElement('div');
     node.className = 'msg tutor';
@@ -45,7 +57,10 @@ export function createChatView() {
   }
 
   function addMine(text, result, gained) {
-    const notes = result.issues.slice(0, 3).map((i) => `
+    const notes = result.issues
+      .filter((i) => !FORMAT_RULES.has(i.ruleId))
+      .slice(0, 3)
+      .map((i) => `
       <div class="note">${i.suggestion
     ? `<b>${esc(i.original)} → ${esc(i.suggestion)}</b><br>` : `<b>${esc(i.original)}</b><br>`}${esc(i.why)}</div>`).join('');
     const node = document.createElement('div');
@@ -67,15 +82,18 @@ export function createChatView() {
     if (!clean || busy) return;
     busy = true;
     const result = analyze(clean, { mode: mode === 'voice' ? 'voice' : 'text' });
-    addMine(clean, result, recordAttempt(result, { mode, scenario: scenario?.id || 'livre' }));
+    addMine(clean, result, recordAttempt(result, { mode, scenario: scenario?.id || topic.id || 'livre' }));
 
     let reply = null;
     if (aiConfigured()) {
+      showTyping(true);
       try {
-        const ai = await aiTurn({ history, userText: clean, level: cefr(), scenario, mode });
-        if (ai.reply) reply = { reply: ai.reply, hintPt: ai.hintPt };
+        const text = await aiReply({ history, userText: clean, level: cefr() });
+        reply = { reply: text, hintPt: '' };
       } catch (err) {
-        addSystem(`Modo IA fora do ar (${err.message}). Seguindo com o tutor do app.`);
+        addSystem(`${err.message} Continuo com o tutor do app.`);
+      } finally {
+        showTyping(false);
       }
     }
     if (!reply) {
@@ -89,13 +107,24 @@ export function createChatView() {
     root.dispatchEvent(new CustomEvent('progress-changed', { bubbles: true }));
   }
 
-  function startChat(id) {
+  function startChat(value) {
     stopSpeaking();
-    scenario = SCENARIOS.find((s) => s.id === id) || null;
     turnIndex = 0;
     history = [];
     log.innerHTML = '';
-    const opening = openingLine(scenario);
+    scenario = SCENARIOS.find((x) => x.id === value) || null;
+    topic = TOPICS.find((t) => t.id === value) || TOPICS[0];
+
+    if (scenario) {
+      const opening = openingLine(scenario);
+      addTutor(opening.reply, opening.hintPt);
+      return;
+    }
+    if (aiConfigured()) {
+      addTutor(topic.opener);
+      return;
+    }
+    const opening = openingLine(null);
     addTutor(opening.reply, opening.hintPt);
   }
 
@@ -145,21 +174,37 @@ export function createChatView() {
   }
 
   function render() {
-    const options = [
-      '<option value="">Conversa livre</option>',
-      ...scenariosForLevel(cefr()).map((s) => `<option value="${s.id}">${s.emoji} ${esc(s.title)}</option>`),
-    ].join('');
+    const nativo = aiConfigured();
+    const options = `
+      <optgroup label="Bate-papo">
+        ${TOPICS.map((t) => `<option value="${t.id}">${esc(t.label)}</option>`).join('')}
+      </optgroup>
+      <optgroup label="Situações (com roteiro)">
+        ${scenariosForLevel(cefr()).map((x) => `<option value="${x.id}">${x.emoji} ${esc(x.title)}</option>`).join('')}
+      </optgroup>`;
 
     root.innerHTML = `
       <div class="screen">
-        <div class="switch" style="margin-bottom:14px">
+        <div class="row spread" style="margin-bottom:12px">
+          <div class="partner">
+            <span class="flag">${nativo ? '🇺🇸' : '📴'}</span>
+            <div>
+              <b>${nativo ? 'Alex · nativo dos EUA' : 'Tutor do app'}</b>
+              <p>${nativo ? 'conversa sobre qualquer assunto' : 'respostas simples, sem internet'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="switch" style="margin-bottom:12px">
           <button data-mode="voice" aria-pressed="${mode === 'voice'}">🎤 Falar</button>
           <button data-mode="text" aria-pressed="${mode === 'text'}">✍️ Escrever</button>
         </div>
         <div class="row" style="margin-bottom:14px">
           <select class="js-scenario" style="flex:1">${options}</select>
-          <button class="btn small js-restart">↺</button>
+          <button class="btn small js-restart" aria-label="Recomeçar a conversa">↺</button>
         </div>
+        ${nativo ? '' : `<div class="banner" style="margin-bottom:12px">
+          Quer conversar com um nativo sobre qualquer assunto? Ative em <b>Ajustes → Conversa com nativo</b>.</div>`}
         <div class="chat js-log" style="min-height:40vh"></div>
         ${composer()}
       </div>`;

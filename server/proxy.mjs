@@ -2,9 +2,11 @@
 // Servidor local OPCIONAL do Speak Up.
 //
 //   1. serve os arquivos estáticos do app (http://localhost:8787)
-//   2. expõe /api/tutor, que fala com a API da Anthropic usando o SDK oficial
+//   2. expõe /api/chat, que fala com a API da Anthropic usando o SDK oficial
 //
 // A chave da API fica só aqui (variável de ambiente), nunca no navegador.
+// No celular, use o modo "chave neste aparelho" em Ajustes — este servidor só
+// funciona no computador em que ele está rodando.
 //
 //   npm install            (dentro de server/)
 //   export ANTHROPIC_API_KEY=...   # ou: ant auth login
@@ -16,6 +18,8 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { systemPrompt } from '../js/persona.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -51,102 +55,43 @@ async function getClient() {
   return client;
 }
 
-const SYSTEM = `You are Guilherme's personal English tutor. He is Brazilian, speaks Portuguese,
-and is studying English on his own. He is returning to English after a break.
-
-Your job on every turn:
-1. Correct his English precisely but kindly — grammar, word choice, prepositions, verb tense.
-2. Keep the conversation going with ONE natural follow-up question so he keeps talking.
-3. Explain each correction in Brazilian Portuguese, short and concrete.
-
-Rules:
-- Speak to him in English only in "reply" (simple vocabulary, adapted to his CEFR level).
-- Keep "reply" under 45 words, conversational, never a lecture, and always end with a question
-  unless the conversation is clearly finished.
-- Explanations ("explanation_pt", "hint_pt") are in Portuguese.
-- Only list real mistakes. If the sentence is correct, return an empty "corrections" array and
-  say so briefly in "recast".
-- Answer with ONLY a JSON object, no markdown fences, in this exact shape:
-{
-  "reply": "your English reply with one follow-up question",
-  "recast": "the corrected version of his sentence, or a short praise if it was already correct",
-  "hint_pt": "uma dica curta em português sobre o que praticar agora",
-  "corrections": [
-    {"original": "...", "suggestion": "...", "category": "verbo|preposição|vocabulário|tempo verbal|artigo|plural|ordem das palavras|pronúncia",
-     "explanation_pt": "por que está errado, em português"}
-  ]
-}`;
-
-function extractJson(text) {
-  const cleaned = text.replace(/^```(?:json)?/m, '').replace(/```$/m, '').trim();
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const start = cleaned.indexOf('{');
-    const end = cleaned.lastIndexOf('}');
-    if (start >= 0 && end > start) {
-      try { return JSON.parse(cleaned.slice(start, end + 1)); } catch { /* abaixo */ }
-    }
-  }
-  return { reply: text.slice(0, 400), recast: '', hint_pt: '', corrections: [] };
+function messagesFrom(history, userText) {
+  const turns = history
+    .filter((m) => m.content && String(m.content).trim())
+    .slice(-16)
+    .map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content).slice(0, 2000),
+    }));
+  if (turns.length && turns[0].role === 'assistant') turns.unshift({ role: 'user', content: 'Hey!' });
+  const clean = turns.filter((m, i) => i === 0 || m.role !== turns[i - 1].role);
+  if (clean.length && clean[clean.length - 1].role === 'user') clean.pop();
+  return [...clean, { role: 'user', content: String(userText).slice(0, 2000) }];
 }
 
-async function askClaude({ history, userText, level, scenario, mode }) {
+async function askClaude({ history, userText, level }) {
   const anthropic = await getClient();
   if (!anthropic) throw new Error(`SDK indisponível: ${clientError}`);
 
-  const context = [
-    `Guilherme's estimated level: ${level || 'A1'}.`,
-    `Channel: ${mode === 'voice' ? 'speaking practice (transcribed speech — ignore punctuation and capitalization)' : 'writing practice'}.`,
-    scenario ? `Role-play scenario: ${scenario.title} — ${scenario.goal}. Stay in character.` : 'Free conversation.',
-  ].join(' ');
-
-  const messages = [
-    ...history.map((m) => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: String(m.content || '').slice(0, 2000),
-    })),
-    { role: 'user', content: `${context}\n\nHis new message: "${userText}"` },
-  ];
-
-  const params = {
+  const response = await anthropic.messages.create({
     model: MODEL,
-    max_tokens: 2000,
-    system: SYSTEM,
-    thinking: { type: 'adaptive' },
+    max_tokens: 1000,
+    system: systemPrompt(level),
     output_config: { effort: 'low' },
-    messages,
-  };
-
-  // Primeiro com fallback no servidor (evita respostas vazias em recusas);
-  // se o beta não estiver liberado na conta, repete sem ele.
-  let response;
-  try {
-    response = await anthropic.beta.messages.create({
-      ...params,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-    });
-  } catch (err) {
-    if (err?.status !== 400) throw err;
-    response = await anthropic.messages.create(params);
-  }
+    messages: messagesFrom(history, userText),
+  });
 
   if (response.stop_reason === 'refusal') {
-    return {
-      reply: "Let's keep practicing with another topic. What did you do today?",
-      recast: '',
-      hint_pt: 'O tutor de IA não respondeu a essa mensagem. Tente outro assunto.',
-      corrections: [],
-    };
+    return { reply: "Let's talk about something else. What did you do today?" };
   }
 
-  const text = response.content
-    .filter((block) => block.type === 'text')
-    .map((block) => block.text)
-    .join('\n');
-
-  return extractJson(text);
+  return {
+    reply: response.content
+      .filter((block) => block.type === 'text')
+      .map((block) => block.text)
+      .join(' ')
+      .trim(),
+  };
 }
 
 function json(res, status, body) {
@@ -198,7 +143,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.url.startsWith('/api/tutor') && req.method === 'POST') {
+  if (req.url.startsWith('/api/chat') && req.method === 'POST') {
     let raw = '';
     req.on('data', (chunk) => {
       raw += chunk;
@@ -212,11 +157,9 @@ const server = http.createServer(async (req, res) => {
           history: Array.isArray(body.history) ? body.history : [],
           userText: String(body.userText).slice(0, 2000),
           level: body.level,
-          scenario: body.scenario,
-          mode: body.mode,
         }));
       } catch (err) {
-        console.error('[speakup] erro no /api/tutor:', err);
+        console.error('[speakup] erro no /api/chat:', err);
         json(res, 500, { error: err.message });
       }
     });

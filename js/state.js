@@ -24,7 +24,9 @@ const DEFAULTS = {
     ttsRate: 0.92,
     autoSpeak: true,
     showTranslationHints: true,
-    aiEnabled: false,
+    aiMode: 'off',          // 'off' | 'key' (celular) | 'server' (computador)
+    aiKey: '',              // chave da API, guardada só neste aparelho
+    aiModel: 'claude-opus-5',
     aiEndpoint: 'http://localhost:8787',
   },
 };
@@ -50,12 +52,16 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { ...structuredClone(DEFAULTS), createdAt: todayKey() };
     const parsed = JSON.parse(raw);
-    return {
+    const merged = {
       ...structuredClone(DEFAULTS),
       ...parsed,
       settings: { ...DEFAULTS.settings, ...(parsed.settings || {}) },
       streak: { ...DEFAULTS.streak, ...(parsed.streak || {}) },
     };
+    // Versões antigas guardavam só "aiEnabled" com o servidor local.
+    if (merged.settings.aiEnabled && merged.settings.aiMode === 'off') merged.settings.aiMode = 'server';
+    delete merged.settings.aiEnabled;
+    return merged;
   } catch (err) {
     console.warn('Não consegui ler o progresso salvo, começando do zero.', err);
     return { ...structuredClone(DEFAULTS), createdAt: todayKey() };

@@ -1,6 +1,19 @@
 // Conteúdo da conversa livre: cenários e temas de escrita.
 // (Pronúncia, ditado e exercícios de correção agora vivem em js/missions.js.)
 
+export const TOPICS = [
+  { id: '', label: '💬 Qualquer assunto', opener: "Hey Guilherme! Good to see you. How's your day going so far?" },
+  { id: 'day', label: '🌤️ Meu dia', opener: 'Hey! Tell me about your day. Was it a good one?' },
+  { id: 'work', label: '💼 Trabalho', opener: "Hey! So how's work been lately? Anything driving you crazy?" },
+  { id: 'football', label: '⚽ Futebol', opener: "Hey! Did you watch any games this weekend? I'm trying to get into soccer, honestly." },
+  { id: 'movies', label: '🎬 Filmes e séries', opener: 'Hey! I need something new to watch tonight. Seen anything good lately?' },
+  { id: 'food', label: '🍽️ Comida', opener: "Hey! Random question — what's the best thing you've eaten this week?" },
+  { id: 'travel', label: '✈️ Viagem', opener: 'Hey! If you could take off somewhere next month, where would you go?' },
+  { id: 'tech', label: '💻 Tecnologia', opener: 'Hey! Have you messed around with any new apps or gadgets lately?' },
+  { id: 'music', label: '🎧 Música', opener: "Hey! What have you been listening to? I'm stuck on the same three albums." },
+  { id: 'family', label: '👨‍👩‍👧 Família', opener: 'Hey! How is everyone at home? Anything going on with the family?' },
+];
+
 export const SCENARIOS = [
   {
     id: 'warmup',

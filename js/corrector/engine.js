@@ -5,6 +5,11 @@ import { esc, clamp, words as wordList } from '../utils.js';
 
 const MAX_PASSES = 3;
 
+/** Regras de forma (maiúscula, pontuação): aparecem no diff, não viram nota. */
+export const FORMAT_RULES = new Set([
+  'final-punctuation', 'sentence-case', 'lowercase-i', 'proper-noun-case',
+]);
+
 function collect(text) {
   const found = [];
   for (const rule of RULES) {
@@ -176,7 +181,7 @@ export function analyze(input, { mode = 'text' } = {}) {
   });
 
   // Pontuação/maiúsculas e avisos pesam menos que um erro de gramática.
-  const FORMAT = new Set(['final-punctuation', 'sentence-case', 'lowercase-i', 'proper-noun-case']);
+  const FORMAT = FORMAT_RULES;
   const count = wordList(original).length;
   const weighted = unique.reduce((sum, it) => {
     // Avisos (falso cognato, dica de uso) não tiram nota — são só um alerta.

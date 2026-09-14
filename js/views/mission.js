@@ -1,7 +1,7 @@
 // Tela de uma fase: um item por vez, feedback imediato, estrelas no fim.
 
 import { esc, $, words, alignWords } from '../utils.js';
-import { analyze } from '../corrector/engine.js';
+import { analyze, FORMAT_RULES } from '../corrector/engine.js';
 import {
   MISSIONS_BY_ID, TYPE_META, itemOf, starsFor,
 } from '../missions.js';
@@ -50,11 +50,15 @@ export function createMissionView({ onExit }) {
 
   // ------------------------------------------------------------ correções ---
   function notesHtml(result, max = 3) {
-    return result.issues.slice(0, max).map((i) => `
+    const notas = result.issues
+      .filter((i) => !FORMAT_RULES.has(i.ruleId))
+      .slice(0, max)
+      .map((i) => `
       <div class="note">
         ${i.suggestion ? `<b>${esc(i.original)} → ${esc(i.suggestion)}</b><br>` : `<b>${esc(i.original)}</b><br>`}
         ${esc(i.why)}
       </div>`).join('');
+    return notas ? `<div class="notes">${notas}</div>` : '';
   }
 
   function gradeSentence(text, mode) {
@@ -66,8 +70,7 @@ export function createMissionView({ onExit }) {
         <div class="fix ${result.issues.length ? '' : 'ok'}">
           <div class="said">você disse</div>
           <div class="diff">${result.diff}</div>
-          ${result.issues.length ? `<div class="notes">${notesHtml(result)}</div>`
-    : '<div class="notes"><div class="note">Perfeito, nada a corrigir. 🎯</div></div>'}
+          ${notesHtml(result) || '<div class="notes"><div class="note">Perfeito, nada a corrigir. 🎯</div></div>'}
         </div>`,
     };
   }

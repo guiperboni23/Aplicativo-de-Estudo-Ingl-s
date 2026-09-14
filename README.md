@@ -1,8 +1,9 @@
 # 🎧 Speak Up — inglês progressivo (voz + escrita)
 
 Jogo de estudo de inglês em **50 fases**: você fala ou escreve, o app corrige cada erro na hora
-com explicação em português, dá estrelas e libera a próxima fase. Tem também conversa livre por
-voz, revisão dos seus próprios erros e acompanhamento de evolução — tudo salvo no seu aparelho.
+com explicação em português, dá estrelas e libera a próxima fase. Tem também **conversa livre com
+um nativo dos EUA** (por voz ou texto, sobre qualquer assunto), revisão dos seus próprios erros e
+acompanhamento de evolução — tudo salvo no seu aparelho.
 
 Feito para o Guilherme retomar o inglês sozinho, com correção constante e dificuldade crescente.
 
@@ -94,8 +95,8 @@ Cinco tipos de fase:
 Todo erro que você comete em qualquer fase vira **cartão de revisão**. Quando houver cartões
 vencidos, aparece a **Revisão do dia** no topo do mapa (repetição espaçada de 1, 3, 7, 16 e 35 dias).
 
-As outras três abas: **Conversa** (voz ou escrita, livre ou por cenário), **Progresso**
-(fases, estrelas, precisão, onde você mais erra) e **Ajustes** (voz, velocidade, microfone).
+As outras três abas: **Conversa** (bate-papo livre, voz ou escrita), **Progresso**
+(fases, estrelas, precisão, onde você mais erra) e **Ajustes** (voz, microfone, conversa com nativo).
 
 ## Como a correção funciona
 
@@ -124,26 +125,44 @@ No **modo voz**, pontuação e grafia não contam como erro (quem pontua é o re
 
 ---
 
-## Modo IA (opcional)
+## Conversa com um nativo (opcional)
 
-Sem IA o app já corrige e conversa: o tutor offline tem 8 cenários roteirizados (café, entrevista,
-reunião, viagem, médico, small talk…) e conversa livre com perguntas de acompanhamento.
+Na aba **Conversa** você bate papo com o *Alex*, um americano de Denver, sobre qualquer assunto —
+futebol, trabalho, filmes, o seu dia. Ele fala inglês casual e curto, tem opinião, devolve pergunta
+e corrige seus erros do jeito que um amigo corrige: repetindo a frase certa dentro da resposta.
+As explicações de gramática em português continuam vindo do corretor do próprio app, que roda
+no aparelho e é instantâneo.
 
-Ligando o modo IA, as respostas ficam mais naturais e as correções mais detalhadas. A chave da API
-fica **no seu computador**, dentro do servidor local — nunca na página:
+Isso usa a API da Anthropic e **é pago por uso** (cerca de 1 centavo de dólar por mensagem no
+Claude Opus 5; o Haiku 4.5 custa umas 5 vezes menos). Há dois jeitos de ligar, em **Ajustes →
+Conversa com nativo**:
+
+**1. Chave neste aparelho — é o que funciona no celular**
+
+1. Crie uma chave em [console.anthropic.com](https://console.anthropic.com) → *API keys*, e defina
+   um limite de gastos na conta.
+2. Em Ajustes, escolha *Chave neste aparelho*, cole a chave (`sk-ant-...`) e escolha o modelo.
+3. Toque em **testar conversa**: se aparecer um ✅ com uma frase em inglês, está pronto.
+
+O navegador chama a API direto, com os mesmos cabeçalhos que o SDK oficial usa no modo
+`dangerouslyAllowBrowser`. A chave fica guardada só no seu aparelho — **quem pegar seu celular
+desbloqueado consegue vê-la**, então use uma chave só para isso, com limite de gasto.
+
+**2. Servidor local — mais seguro, mas só no computador**
 
 ```bash
 cd server
 npm install
-export ANTHROPIC_API_KEY="sua-chave"   # ou: ant auth login
+export ANTHROPIC_API_KEY="sua-chave"
 cd ..
-node server/proxy.mjs                  # http://localhost:8787
+node server/proxy.mjs       # http://localhost:8787
 ```
 
-Depois, em **Ajustes → Modo IA**, marque "usar o tutor de IA" e clique em "testar conexão".
-Se o servidor cair, o app volta sozinho para o tutor offline.
+Em Ajustes, escolha *Servidor local*. A chave nunca entra no navegador. O modelo padrão é
+`claude-opus-5` (mude com `SPEAKUP_MODEL=...`).
 
-O modelo padrão é `claude-opus-5` (mude com `SPEAKUP_MODEL=...`).
+**Sem nada disso o app continua inteiro**: as 50 fases, a correção e os treinos não dependem de
+internet, e a conversa livre cai no tutor offline, que puxa assunto e responde de forma simples.
 
 ---
 
@@ -153,7 +172,7 @@ O modelo padrão é `claude-opus-5` (mude com `SPEAKUP_MODEL=...`).
 node --test "tests/*.test.mjs"
 ```
 
-Os testes cobrem a morfologia (conjugação, comparativos, artigos), as correções por categoria,
+Os testes cobrem o formato das mensagens mandadas para a API, a morfologia (conjugação, comparativos, artigos), as correções por categoria,
 o modo voz, o alinhamento de palavras da pronúncia e a integridade das 50 fases. Dois deles são
 os mais importantes: **frases corretas não podem ser alteradas** e **toda resposta certa do
 conteúdo tem que passar limpa pelo próprio corretor** — foi assim que apareceram (e foram
@@ -177,9 +196,10 @@ js/corrector/
   rules.js              200+ regras de correção com explicação em português
   morphology.js         conjugação, plural, comparativos, artigos
   engine.js             aplica as regras, gera texto corrigido, diff e nota
-js/lessons.js           cenários e temas da conversa livre
-js/tutor.js             respostas do tutor offline
-js/ai.js                cliente do modo IA
+js/lessons.js           assuntos, cenários e temas da conversa livre
+js/tutor.js             respostas do tutor offline (plano B, sem internet)
+js/persona.js           quem é o Alex: a instrução mandada em toda conversa
+js/ai.js                conversa com nativo (chave no aparelho ou servidor local)
 js/views/               telas: mapa, fase, conversa, progresso, ajustes
 server/proxy.mjs        servidor local opcional (estáticos + API do tutor de IA)
 tests/                  testes do corretor e do conteúdo das fases
@@ -188,5 +208,6 @@ tests/                  testes do corretor e do conteúdo das fases
 ## Privacidade
 
 Tudo fica no `localStorage` do seu navegador (exporte o JSON de vez em quando na aba Progresso).
-O reconhecimento de fala do Chrome envia o áudio para o serviço do navegador; o modo IA, quando
-ligado, envia suas frases para a API da Anthropic através do servidor local.
+O reconhecimento de fala do Chrome envia o áudio para o serviço do navegador. A conversa com o
+nativo, quando ligada, envia o que você fala ou escreve para a API da Anthropic — direto do
+aparelho ou pelo servidor local, conforme o modo escolhido. Sem ela, nada sai do seu aparelho.
