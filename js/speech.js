@@ -101,6 +101,22 @@ export function onVoicesReady(cb) {
   speechSynthesis.addEventListener('voiceschanged', () => cb(englishVoices()), { once: true });
 }
 
+let primed = false;
+
+/**
+ * Celulares só liberam a voz sintetizada depois de um toque do usuário.
+ * Chame isso no primeiro toque da página para destravar o áudio.
+ */
+export function primeSpeech() {
+  if (primed || !ttsSupported()) return;
+  primed = true;
+  try {
+    const silent = new SpeechSynthesisUtterance(' ');
+    silent.volume = 0;
+    speechSynthesis.speak(silent);
+  } catch { /* alguns navegadores ignoram, tudo bem */ }
+}
+
 /** Fala um texto em inglês. Devolve uma Promise que resolve no fim da fala. */
 export function speak(text, { rate = 0.92, voiceURI = '', lang = 'en-US' } = {}) {
   return new Promise((resolve) => {

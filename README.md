@@ -8,6 +8,43 @@ Feito para o Guilherme retomar o inglês sozinho, com correção constante e dif
 
 ---
 
+## Usar no celular (recomendado)
+
+O app é publicado de graça pelo **GitHub Pages** e vira um ícone na tela de início do celular.
+O endereço `https://` é obrigatório: sem ele o navegador não libera o microfone.
+
+**1. Ligar o GitHub Pages (uma única vez, pelo computador ou pelo próprio celular)**
+
+1. Abra o repositório no GitHub → aba **Settings** (Configurações).
+2. No menu da esquerda, clique em **Pages**.
+3. Em *Build and deployment* → *Source*, escolha **Deploy from a branch**.
+4. Em *Branch*, escolha a branch do projeto e a pasta **/ (root)** → **Save**.
+5. Espere de 1 a 2 minutos e recarregue a página: aparece o link
+   `https://guiperboni23.github.io/Aplicativo-de-Estudo-Ingl-s/`.
+
+**2. Instalar no celular**
+
+- **Android (Chrome):** abra o link → menu **⋮** → **Adicionar à tela inicial** / *Instalar app*.
+- **iPhone (Safari):** abra o link → botão **Compartilhar** → **Adicionar à Tela de Início**.
+
+Ele abre em tela cheia, com ícone próprio, e **funciona offline** (o único recurso que precisa de
+internet é o reconhecimento de fala do Chrome).
+
+**3. Liberar o microfone**
+
+Na primeira gravação o navegador pergunta se pode usar o microfone — toque em **Permitir**.
+Se negar sem querer: Chrome → 🔒 ao lado do endereço → *Permissões* → *Microfone* → Permitir.
+
+> **Qual navegador:** no Android use o **Chrome** (reconhecimento de fala completo).
+> No iPhone use o **Safari** (iOS 14.5+); se a fala não funcionar no seu aparelho, o chat escrito,
+> os treinos e o progresso continuam funcionando normalmente, e o chat de voz tem um campo
+> para digitar o que você diria.
+
+> **Atenção:** o progresso fica salvo no navegador do aparelho. Celular e computador têm XP
+> separados — use *Progresso → exportar JSON* para levar de um para o outro.
+
+---
+
 ## Como usar
 
 O app é um site estático (sem build, sem dependências obrigatórias). Como ele usa módulos ES,
@@ -27,7 +64,7 @@ node server/proxy.mjs
 No Firefox/Safari o chat de voz fica indisponível, mas o chat escrito, os treinos e o progresso
 funcionam normalmente. Na primeira gravação o navegador pede permissão de microfone — aceite.
 
-Publicar no GitHub Pages também funciona: basta apontar o Pages para a branch (`/root`).
+Publicar no GitHub Pages também funciona — veja a seção "Usar no celular" acima.
 
 ---
 
@@ -112,6 +149,9 @@ o modo voz, o alinhamento de palavras da pronúncia e — o mais importante — 
 
 ```
 index.html              interface e abas
+manifest.webmanifest    dados de instalação no celular (nome, ícone, cor)
+sw.js                   service worker: faz o app abrir offline
+icons/                  ícones do app
 css/styles.css          tema escuro
 js/app.js               abas, HUD (nível/XP/ofensiva), atalhos
 js/state.js             XP, níveis, ofensiva, histórico e revisão espaçada (localStorage)

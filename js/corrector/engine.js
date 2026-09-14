@@ -62,8 +62,13 @@ function applyFixes(text, accepted) {
 /** Maiúscula no início das frases e pontuação final. */
 function polish(text) {
   const issues = [];
-  let out = text.replace(/(^|[.!?]\s+)([a-z])/g, (m, pre, ch) => pre + ch.toUpperCase());
+  const lowerStarts = [];
+  let out = text.replace(/(^|[.!?]\s+)([a-z])(\w*)/g, (m, pre, ch, rest) => {
+    lowerStarts.push(ch + rest);
+    return `${pre}${ch.toUpperCase()}${rest}`;
+  });
   if (out !== text) {
+    const first = lowerStarts[0] || '';
     issues.push({
       ruleId: 'sentence-case',
       cat: 'ortografia',
@@ -71,8 +76,8 @@ function polish(text) {
       why: 'Comece as frases com letra maiúscula.',
       ex: '',
       warn: false,
-      original: text.trim().slice(0, 24),
-      suggestion: out.trim().slice(0, 24),
+      original: first,
+      suggestion: first.charAt(0).toUpperCase() + first.slice(1),
     });
   }
   if (out.length > 3 && !/[.!?…]$/.test(out.trim())) {

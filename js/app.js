@@ -6,6 +6,7 @@ import { createConversationView } from './views/conversation.js';
 import { createDrillsView } from './views/drills.js';
 import { createProgressView } from './views/progress.js';
 import { createSettingsView } from './views/settings.js';
+import { primeSpeech } from './speech.js';
 
 const views = [
   createConversationView('voice'),
@@ -44,7 +45,7 @@ function refreshHud() {
   const state = getState();
   const lvl = levelInfo();
   const s = stats();
-  $('#hud-level').textContent = `${lvl.code} · ${lvl.name}`;
+  $('#hud-level').innerHTML = `${lvl.code}<span class="lvl-name"> · ${lvl.name}</span>`;
   $('#hud-xp-fill').style.width = `${lvl.progress}%`;
   $('#hud-xp-text').textContent = lvl.next
     ? `${state.xp} XP · ${lvl.toNext} para ${lvl.next.code}`
@@ -78,6 +79,20 @@ document.addEventListener('keydown', (e) => {
   const index = Number(e.key) - 1;
   if (Number.isInteger(index) && index >= 0 && index < views.length) show(views[index].id);
 });
+
+// Destrava a voz do tutor no primeiro toque (exigência de iOS e Android).
+document.addEventListener('pointerdown', primeSpeech, { once: true });
+
+// Instalação no celular: o service worker faz o app abrir offline.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  const jaTinhaVersao = Boolean(navigator.serviceWorker.controller);
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* segue sem offline */ });
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (jaTinhaVersao) toast('Nova versão instalada — recarregue a página.');
+  });
+}
 
 refreshHud();
 show(localStorage.getItem('speakup.tab') || 'voice');

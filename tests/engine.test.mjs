@@ -63,6 +63,13 @@ test('incontáveis, artigos e comparativos', () => {
   corrige('there is many people', 'There are many people.');
 });
 
+test('verbo auxiliar e infinitivo com "to"', () => {
+  corrige('i am study english every days', 'I am studying English every day.');
+  corrige('I want speak with my boss', 'I want to speak with my boss.');
+  corrige('I try speak english every day', 'I try to speak English every day.');
+  corrige('she need study more', 'She needs to study more.');
+});
+
 test('negativas e perguntas', () => {
   corrige("I don't know nothing", "I don't know anything.");
   corrige('what means this word', 'What does this word mean?');
@@ -79,6 +86,11 @@ test('frases corretas não são alteradas', () => {
     'Could you repeat that more slowly, please?',
     'There are a lot of options on the menu.',
     'He is an engineer and she is a teacher.',
+    'You are like your father in many ways.',
+    'I am going to the gym after work.',
+    'I need help with this report.',
+    'She is studying for the test right now.',
+    'I want to work abroad next year.',
   ];
   for (const frase of corretas) {
     const r = analyze(frase);

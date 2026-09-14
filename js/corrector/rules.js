@@ -10,7 +10,7 @@
 //   ex   - exemplo curto (opcional)
 
 import {
-  third, past, participle, comparative, beOf, matchCase, articleFor,
+  third, past, participle, gerund, comparative, beOf, matchCase, articleFor,
 } from './morphology.js';
 
 export const CAT = {
@@ -316,6 +316,27 @@ export const RULES = [
     fix: (m) => `${m[1]} doesn't ${m[2]}`,
     why: 'A negativa com he/she/it é "doesn\'t + verbo base".',
     ex: "He doesn't work here.",
+  },
+  {
+    id: 'be-plus-base-verb',
+    cat: CAT.VERB,
+    sev: 3,
+    re: rx(`\\b(I|you|we|they|he|she)\\s+(am|is|are|was|were|'m|'s|'re)\\s+(go|work|study|eat|drink|play|watch|read|write|speak|talk|learn|travel|wait|run|walk|sleep|cook|drive|try|look|listen|practice|train)\\b`),
+    fix: (m) => `${m[1]} ${m[2]} ${gerund(m[3])}`,
+    why: 'Depois de am/is/are o verbo vai no -ing (I am studying). Se for rotina, tire o "am": I study English every day.',
+    ex: "I'm studying now. / I study every day.",
+  },
+  {
+    id: 'want-plus-verb',
+    cat: CAT.VERB,
+    sev: 3,
+    // Só verbos que não são substantivos comuns em inglês: "I need help" é
+    // uma frase correta (help = ajuda) e não pode virar "I need to help".
+    re: rx('\\b(want|wants|wanted|need|needs|needed|decide|decides|decided|hope|hopes|hoped|forget|forgets|promise|promises|refuse|refuses|learn|learns|learned|try|tries|tried|plan|plans|planned|agree|agrees|agreed|expect|expects|expected|prefer|prefers|preferred|offer|offers|offered|manage|manages|managed)'
+      + '\\s+(go|speak|talk|learn|study|understand|improve|practice|travel|eat|drink|buy|sell|write|read|leave|arrive|become|sleep|listen|explain|remember|continue|finish|start|stop|meet|know|live|stay|wake)\\b'),
+    fix: (m) => `${m[1]} to ${m[2]}`,
+    why: 'Esses verbos pedem "to" antes do próximo verbo: want to work, need to go, try to speak.',
+    ex: 'I want to work abroad.',
   },
   {
     id: 'modal-plus-to',
@@ -893,7 +914,7 @@ export const RULES = [
     id: 'proper-noun-case',
     cat: CAT.SPELL,
     sev: 1,
-    re: rx('\\b(english|portuguese|spanish|brazil|brazilian|america|american|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|june|july|august|september|october|november|december|christmas)\\b', 'g'),
+    re: rx('\\b(english|portuguese|spanish|french|german|italian|japanese|brazil|brazilian|canada|mexico|argentina|france|germany|italy|japan|china|india|europe|london|paris|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|june|july|august|september|october|november|december|christmas)\\b', 'g'),
     fix: (m) => m[1].charAt(0).toUpperCase() + m[1].slice(1),
     why: 'Idiomas, países, dias da semana e meses são maiúsculos em inglês.',
     ex: 'I study English on Monday.',
