@@ -24,10 +24,6 @@ const DEFAULTS = {
     ttsRate: 0.92,
     autoSpeak: true,
     showTranslationHints: true,
-    aiMode: 'off',          // 'off' | 'key' (celular) | 'server' (computador)
-    aiKey: '',              // chave da API, guardada só neste aparelho
-    aiModel: 'claude-opus-5',
-    aiEndpoint: 'http://localhost:8787',
   },
 };
 
@@ -58,9 +54,14 @@ function load() {
       settings: { ...DEFAULTS.settings, ...(parsed.settings || {}) },
       streak: { ...DEFAULTS.streak, ...(parsed.streak || {}) },
     };
-    // Versões antigas guardavam só "aiEnabled" com o servidor local.
-    if (merged.settings.aiEnabled && merged.settings.aiMode === 'off') merged.settings.aiMode = 'server';
-    delete merged.settings.aiEnabled;
+    // O app não usa mais nenhum serviço pago: apaga o que versões antigas
+    // tenham guardado (inclusive chave de API) na primeira vez que abrir.
+    for (const antigo of ['aiEnabled', 'aiMode', 'aiKey', 'aiModel', 'aiEndpoint']) {
+      if (antigo in merged.settings) {
+        delete merged.settings[antigo];
+        merged.limpezaPendente = true;
+      }
+    }
     return merged;
   } catch (err) {
     console.warn('Não consegui ler o progresso salvo, começando do zero.', err);
@@ -75,6 +76,13 @@ function persist() {
     console.warn('Não consegui salvar o progresso.', err);
   }
   listeners.forEach((fn) => fn(state));
+}
+
+// Se a versão anterior tinha deixado chave de API guardada, grava agora o
+// estado já limpo — sem esperar o próximo ajuste.
+if (state.limpezaPendente) {
+  delete state.limpezaPendente;
+  persist();
 }
 
 export function getState() {

@@ -51,6 +51,7 @@ test('preposições e colocações', () => {
   corrige('we discussed about the project', 'We discussed the project.');
   corrige('I go to home after work', 'I go home after work.');
   corrige('see you in monday', 'See you on Monday.');
+  corrige('in the weekend i want go to the beach', 'On the weekend I want to go to the beach.');
   corrige('I made a mistake? no, I did a mistake', 'I made a mistake? No, I made a mistake.');
   corrige('can you explain me this', 'Can you explain this to me?');
 });

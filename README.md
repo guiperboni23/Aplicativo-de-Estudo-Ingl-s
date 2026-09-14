@@ -1,9 +1,11 @@
 # 🎧 Speak Up — inglês progressivo (voz + escrita)
 
 Jogo de estudo de inglês em **50 fases**: você fala ou escreve, o app corrige cada erro na hora
-com explicação em português, dá estrelas e libera a próxima fase. Tem também **conversa livre com
-um nativo dos EUA** (por voz ou texto, sobre qualquer assunto), revisão dos seus próprios erros e
-acompanhamento de evolução — tudo salvo no seu aparelho.
+com explicação em português, dá estrelas e libera a próxima fase. Tem também conversa livre por
+voz ou texto, revisão dos seus próprios erros e acompanhamento de evolução.
+
+**É gratuito e funciona offline.** Não tem conta, não tem assinatura, não tem serviço pago por
+trás: tudo — correção, conversa, fontes, ícones — roda dentro do seu aparelho.
 
 Feito para o Guilherme retomar o inglês sozinho, com correção constante e dificuldade crescente.
 
@@ -56,9 +58,8 @@ precisa ser servido por HTTP — abrir o arquivo direto (`file://`) não funcion
 python3 -m http.server 8787
 # depois abra http://localhost:8787
 
-# opção 2 — o servidor do projeto (serve o app e habilita o modo IA)
-node server/proxy.mjs
-# abre em http://localhost:8787
+# opção 2 — o servidor do projeto (mesma coisa, sem dependências)
+node server/serve.mjs
 ```
 
 **Use o Chrome ou o Edge** (desktop ou Android): são os navegadores com reconhecimento de fala.
@@ -125,44 +126,22 @@ No **modo voz**, pontuação e grafia não contam como erro (quem pontua é o re
 
 ---
 
-## Conversa com um nativo (opcional)
+## Conversa livre
 
-Na aba **Conversa** você bate papo com o *Alex*, um americano de Denver, sobre qualquer assunto —
-futebol, trabalho, filmes, o seu dia. Ele fala inglês casual e curto, tem opinião, devolve pergunta
-e corrige seus erros do jeito que um amigo corrige: repetindo a frase certa dentro da resposta.
-As explicações de gramática em português continuam vindo do corretor do próprio app, que roda
-no aparelho e é instantâneo.
+Na aba **Conversa** você bate papo com o Alex, o parceiro de conversa do app, por voz ou por
+escrito. Ele não é um modelo de linguagem — é um motor de diálogo que roda no aparelho:
 
-Isso usa a API da Anthropic e **é pago por uso** (cerca de 1 centavo de dólar por mensagem no
-Claude Opus 5; o Haiku 4.5 custa umas 5 vezes menos). Há dois jeitos de ligar, em **Ajustes →
-Conversa com nativo**:
+- reconhece o assunto pelo que você escreve (trabalho, família, comida, futebol, viagem, bichos,
+  filmes, música, tecnologia, dinheiro, saúde, planos, infância, cidade e mais);
+- reage ao tom do que você disse ("That's awesome" / "Yeah, that sounds rough");
+- tem opiniões próprias e faz sempre uma pergunta nova, sem repetir na mesma conversa;
+- lembra dos assuntos que você trouxe e volta neles depois;
+- quando você erra, sugere uma frase pronta para guardar, da categoria do seu erro.
 
-**1. Chave neste aparelho — é o que funciona no celular**
+E, o tempo todo, o corretor analisa cada frase sua e explica os erros em português.
 
-1. Crie uma chave em [console.anthropic.com](https://console.anthropic.com) → *API keys*, e defina
-   um limite de gastos na conta.
-2. Em Ajustes, escolha *Chave neste aparelho*, cole a chave (`sk-ant-...`) e escolha o modelo.
-3. Toque em **testar conversa**: se aparecer um ✅ com uma frase em inglês, está pronto.
-
-O navegador chama a API direto, com os mesmos cabeçalhos que o SDK oficial usa no modo
-`dangerouslyAllowBrowser`. A chave fica guardada só no seu aparelho — **quem pegar seu celular
-desbloqueado consegue vê-la**, então use uma chave só para isso, com limite de gasto.
-
-**2. Servidor local — mais seguro, mas só no computador**
-
-```bash
-cd server
-npm install
-export ANTHROPIC_API_KEY="sua-chave"
-cd ..
-node server/proxy.mjs       # http://localhost:8787
-```
-
-Em Ajustes, escolha *Servidor local*. A chave nunca entra no navegador. O modelo padrão é
-`claude-opus-5` (mude com `SPEAKUP_MODEL=...`).
-
-**Sem nada disso o app continua inteiro**: as 50 fases, a correção e os treinos não dependem de
-internet, e a conversa livre cai no tutor offline, que puxa assunto e responde de forma simples.
+Se preferir treinar uma situação específica, o mesmo seletor tem 8 cenários com roteiro (café,
+restaurante, aeroporto, médico, reunião, entrevista…).
 
 ---
 
@@ -197,17 +176,17 @@ js/corrector/
   morphology.js         conjugação, plural, comparativos, artigos
   engine.js             aplica as regras, gera texto corrigido, diff e nota
 js/lessons.js           assuntos, cenários e temas da conversa livre
-js/tutor.js             respostas do tutor offline (plano B, sem internet)
-js/persona.js           quem é o Alex: a instrução mandada em toda conversa
-js/ai.js                conversa com nativo (chave no aparelho ou servidor local)
+js/tutor.js             motor de diálogo: reações, perguntas, memória da conversa
 js/views/               telas: mapa, fase, conversa, progresso, ajustes
-server/proxy.mjs        servidor local opcional (estáticos + API do tutor de IA)
-tests/                  testes do corretor e do conteúdo das fases
+css/fonts.css           fontes do app (arquivos em fonts/, nada vem de fora)
+server/serve.mjs        servidor estático para testar no computador (sem dependências)
+tests/                  testes do corretor, do conteúdo das fases e da conversa
 ```
 
 ## Privacidade
 
-Tudo fica no `localStorage` do seu navegador (exporte o JSON de vez em quando na aba Progresso).
-O reconhecimento de fala do Chrome envia o áudio para o serviço do navegador. A conversa com o
-nativo, quando ligada, envia o que você fala ou escreve para a API da Anthropic — direto do
-aparelho ou pelo servidor local, conforme o modo escolhido. Sem ela, nada sai do seu aparelho.
+Seu progresso fica no `localStorage` do navegador (exporte o JSON de vez em quando na aba
+Progresso). O app **não faz nenhuma requisição para fora** — as fontes e os ícones são servidos
+junto com ele. A única coisa que sai do aparelho é o áudio do reconhecimento de fala, que o
+próprio navegador (Chrome/Safari) manda para o serviço dele para transcrever; no chat escrito e
+nas fases de escrita, nem isso.

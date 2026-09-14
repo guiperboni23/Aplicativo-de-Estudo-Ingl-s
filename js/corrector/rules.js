@@ -555,7 +555,10 @@ export const RULES = [
     cat: CAT.PREP,
     sev: 2,
     re: rx('\\bin\\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday|my birthday|the weekend)\\b'),
-    fix: (m) => `on ${m[1].charAt(0).toUpperCase()}${m[1].slice(1)}`,
+    fix: (m) => {
+      const diaDaSemana = /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i.test(m[1]);
+      return `on ${diaDaSemana ? m[1].charAt(0).toUpperCase() + m[1].slice(1) : m[1]}`;
+    },
     why: 'Dias da semana usam "on": on Monday, on the weekend.',
     ex: 'See you on Friday.',
   },
