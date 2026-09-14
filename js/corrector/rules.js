@@ -11,6 +11,7 @@
 
 import {
   third, past, participle, gerund, comparative, beOf, matchCase, articleFor,
+  PAST_TO_BASE, OVERREGULARIZED,
 } from './morphology.js';
 
 export const CAT = {
@@ -43,11 +44,21 @@ const COMMON_VERBS = [
 
 const BASE_OVERRIDES = { goes: 'go', does: 'do', has: 'have', says: 'say' };
 
-/** Volta um verbo em 3ª pessoa para a forma base. */
+/** Volta um verbo (3ª pessoa ou passado) para a forma base. */
 export function baseForm(verb) {
   const v = verb.toLowerCase();
   if (BASE_OVERRIDES[v]) return BASE_OVERRIDES[v];
   if (COMMON_VERBS.includes(v)) return v;
+  if (PAST_TO_BASE[v]) return PAST_TO_BASE[v];
+  if (/ied$/.test(v)) return `${v.slice(0, -3)}y`;
+  if (/ed$/.test(v)) {
+    const tentativas = [
+      v.slice(0, -2),                                   // watched -> watch
+      v.slice(0, -1),                                   // liked   -> like
+      /([^aeiou])\1ed$/.test(v) ? v.slice(0, -3) : '',  // stopped -> stop
+    ].filter(Boolean);
+    return tentativas.find((t) => COMMON_VERBS.includes(t)) || tentativas[0];
+  }
   if (/ies$/.test(v)) return `${v.slice(0, -3)}y`;
   if (/(?:s|x|z|ch|sh)es$/.test(v)) return v.slice(0, -2);
   if (/s$/.test(v)) return v.slice(0, -1);
@@ -60,6 +71,11 @@ const anyForm = (list) => [...new Set(list.flatMap((v) => [v, third(v)]))]
   .join('|');
 
 const VERB_ANY = anyForm(COMMON_VERBS);
+const VERB_ANY_TENSE = [...new Set(COMMON_VERBS.flatMap((v) => [v, third(v), past(v)]))]
+  .sort((a, b) => b.length - a.length).join('|');
+const VERB_PAST = [...new Set(COMMON_VERBS.map((v) => past(v)))]
+  .filter((v) => !COMMON_VERBS.includes(v))
+  .sort((a, b) => b.length - a.length).join('|');
 const VERB_BASE = [...COMMON_VERBS].sort((a, b) => b.length - a.length).join('|');
 const SUBJ = 'I|you|we|they|he|she|it';
 const TIME_PAST = 'yesterday|last night|last week|last month|last year|last weekend'
@@ -274,7 +290,15 @@ export const RULES = [
     cat: CAT.AGREE,
     sev: 3,
     re: rx(`\\b(he|she|it|my \\w+|the \\w+)\\s+(${VERB_BASE})\\b(?!\\s+(?:ing|to be))`),
-    fix: (m) => `${m[1]} ${third(m[2])}`,
+    fix: (m) => {
+      // "The kids play" / "My parents live": sujeito plural não leva -s.
+      const nucleo = m[1].split(/\s+/).pop().toLowerCase();
+      const pluralIrregular = ['people', 'children', 'men', 'women', 'friends', 'parents', 'kids'];
+      const singularComS = ['bus', 'class', 'business', 'boss', 'address', 'news', 'process', 'this'];
+      if (pluralIrregular.includes(nucleo)) return m[0];
+      if (/s$/.test(nucleo) && !singularComS.includes(nucleo)) return m[0];
+      return `${m[1]} ${third(m[2])}`;
+    },
     why: 'Com he/she/it o verbo no presente termina em -s.',
     ex: 'He works in São Paulo.',
   },
@@ -291,13 +315,55 @@ export const RULES = [
     id: 'doesnt-plus-s',
     cat: CAT.AGREE,
     sev: 2,
-    re: rx(`\\b(doesn't|does not|don't|do not|didn't|did not)\\s+(${VERB_ANY})\\b`),
+    re: rx(`\\b(doesn't|does not|don't|do not|didn't|did not)\\s+(${VERB_ANY_TENSE})\\b`),
     fix: (m) => {
       const base = baseForm(m[2]);
       return base === m[2].toLowerCase() ? m[0] : `${m[1]} ${base}`;
     },
-    why: 'Depois de don\'t / doesn\'t / didn\'t o verbo fica na forma base.',
+    why: 'Depois de don\'t / doesn\'t / didn\'t o verbo volta à forma base (sem -s e sem passado).',
     ex: "He doesn't work on Sundays.",
+  },
+  {
+    id: 'did-plus-past',
+    cat: CAT.TENSE,
+    sev: 3,
+    re: rx(`\\b(did)\\s+(${SUBJ})\\s+(${VERB_PAST})\\b`),
+    fix: (m) => `${m[1]} ${m[2]} ${baseForm(m[3])}`,
+    why: '"Did" já marca o passado: o verbo depois dele fica na forma base.',
+    ex: 'Did you see my message?',
+  },
+  {
+    id: 'overregularized-past',
+    cat: CAT.TENSE,
+    sev: 3,
+    re: rx(`\\b(${Object.keys(OVERREGULARIZED).sort((a, b) => b.length - a.length).join('|')})\\b`),
+    fix: (m) => matchCase(m[0], OVERREGULARIZED[m[0].toLowerCase()]),
+    why: 'Esse verbo é irregular: o passado não leva -ed.',
+    ex: 'buy → bought, eat → ate, go → went.',
+  },
+  {
+    id: 'if-would',
+    cat: CAT.TENSE,
+    sev: 3,
+    re: rx(`\\bif\\s+(${SUBJ})\\s+would\\s+(${VERB_BASE}|have|be)\\b`),
+    fix: (m) => `if ${m[1]} ${past(baseForm(m[2]))}`,
+    why: 'Depois de "if" vai o passado, nunca "would": If I had time, I would travel.',
+    ex: 'If I had more time, I would study every day.',
+  },
+  {
+    id: 'when-will',
+    cat: CAT.TENSE,
+    sev: 2,
+    re: rx(`((?:know|knows|knew|tell|tells|told|ask|asks|asked|wonder|wonders|wondered|said|says)\\s+(?:[a-z']+\\s+){0,3})?\\b(when|as soon as|until|before|after|while)\\s+(${SUBJ})\\s+will\\s+(${VERB_BASE}|be|have|get)\\b`),
+    fix: (m) => {
+      // "I don't know when he will arrive" está certo: ali "when" abre uma
+      // pergunta indireta, não uma frase de tempo.
+      if (m[1]) return m[0];
+      const verbo = /^(he|she|it)$/i.test(m[3]) ? third(m[4]) : m[4];
+      return `${m[2]} ${m[3]} ${verbo}`;
+    },
+    why: 'Depois de when / as soon as / until / before / after não se usa "will": o verbo fica no presente.',
+    ex: 'I will call you when I arrive.',
   },
   {
     id: 'negative-no-aux',
@@ -380,8 +446,13 @@ export const RULES = [
     id: 'past-marker-after',
     cat: CAT.TENSE,
     sev: 3,
-    re: rx(`\\b(${SUBJ})\\s+(${VERB_ANY})\\s+((?:[a-z']+\\s+){0,4}?)(${TIME_PAST})\\b`),
-    fix: (m) => `${m[1]} ${past(baseForm(m[2]))} ${m[3]}${m[4]}`,
+    re: rx(`(\\b(?:can|could|will|would|should|must|may|might|to|please)\\s+)?\\b(${SUBJ})\\s+((?:can|could|will|would|should|must|may|might|to)\\s+)?(${VERB_ANY})\\s+((?:[a-z']+\\s+){0,4}?)(${TIME_PAST})\\b`),
+    fix: (m) => {
+      // "Could you send the numbers for last month?" não é passado: o marcador
+      // de tempo pertence ao substantivo, não ao verbo.
+      if (m[1] || m[3] || /\b(for|of|from|until|since)\s+$/i.test(m[5])) return m[0];
+      return `${m[2]} ${past(baseForm(m[4]))} ${m[5]}${m[6]}`;
+    },
     why: 'Com yesterday / last week / ... ago o verbo vai para o passado.',
     ex: 'I watched a movie last night.',
   },
@@ -492,7 +563,7 @@ export const RULES = [
     id: 'in-internet',
     cat: CAT.PREP,
     sev: 2,
-    re: rx('\\bin\\s+the\\s+(internet|phone|bus|train|plane|street|radio|first floor)\\b'),
+    re: rx('\\bin\\s+the\\s+(internet|phone|bus|train|plane|radio|first floor)\\b'),
     fix: (m) => `on the ${m[1]}`,
     why: 'Esses lugares/meios usam "on": on the internet, on the bus, on the phone.',
     ex: 'I saw it on the internet.',

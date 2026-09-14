@@ -1,8 +1,8 @@
 # 🎧 Speak Up — inglês progressivo (voz + escrita)
 
-App de estudo próprio de inglês: você **fala** em inglês, o app **transcreve**, **corrige cada erro**
-com explicação em português e **continua a conversa em voz alta**. Tem também chat escrito, treinos
-curtos e acompanhamento de evolução — tudo salvo no seu navegador.
+Jogo de estudo de inglês em **50 fases**: você fala ou escreve, o app corrige cada erro na hora
+com explicação em português, dá estrelas e libera a próxima fase. Tem também conversa livre por
+voz, revisão dos seus próprios erros e acompanhamento de evolução — tudo salvo no seu aparelho.
 
 Feito para o Guilherme retomar o inglês sozinho, com correção constante e dificuldade crescente.
 
@@ -68,19 +68,34 @@ Publicar no GitHub Pages também funciona — veja a seção "Usar no celular" a
 
 ---
 
-## As cinco abas
+## O mapa de fases
 
-| Aba | O que faz |
+50 fases em trilha, divididas em 5 mundos. Cada fase tem 3 a 5 itens curtos, um tipo só e um foco só.
+Você precisa de **55% de acerto** para passar; 75% dão 2 estrelas e 90% dão 3.
+
+| Mundo | Fases | Foco |
+| --- | --- | --- |
+| Primeiros passos | 1–10 | verbo *to be*, apresentação, rotina |
+| Dia a dia | 11–20 | presente, perguntas, negativas, pedidos |
+| O passado | 21–30 | passado simples, irregulares, histórias |
+| Conversas reais | 31–40 | trabalho, viagem, present perfect, preposições |
+| Opinião e carreira | 41–50 | reunião, entrevista, condicional |
+
+Cinco tipos de fase:
+
+| Tipo | O que você faz |
 | --- | --- |
-| 🎙️ **Voz** | Toque no microfone (ou `Espaço`), fale uma frase. O app transcreve, mostra o que errou palavra por palavra, explica em português e responde em voz alta. |
-| ⌨️ **Escrita** | Mesmo motor de correção para texto (`Ctrl+Enter` envia). Tem botão de tema para escrever quando faltar assunto. |
-| 🏋️ **Treinos** | **Pronúncia** (lê a frase, o app compara palavra por palavra), **Ditado** (ouve e escreve) e **Revisar meus erros** (repetição espaçada com os *seus* erros). |
-| 📈 **Progresso** | XP, nível (A1 → C1), ofensiva de dias, precisão por dia, erros recorrentes por categoria, histórico das frases e backup em JSON. |
-| ⚙️ **Ajustes** | Voz do tutor, velocidade da fala, sotaque do reconhecimento, modo IA e atalhos. |
+| 🎤 **Falar** | responde uma pergunta em inglês falando; o app transcreve e corrige |
+| ✍️ **Escrever** | responde por escrito a um tema em português |
+| 🗣️ **Pronúncia** | lê uma frase em voz alta e vê, palavra por palavra, o que saiu |
+| 🎧 **Ditado** | ouve a frase e escreve o que entendeu |
+| 🔧 **Consertar** | recebe uma frase errada e escreve a versão certa |
 
-Atalhos: `1`–`5` trocam de aba · `Espaço` liga/desliga o microfone · `Ctrl+Enter` envia no chat escrito.
+Todo erro que você comete em qualquer fase vira **cartão de revisão**. Quando houver cartões
+vencidos, aparece a **Revisão do dia** no topo do mapa (repetição espaçada de 1, 3, 7, 16 e 35 dias).
 
----
+As outras três abas: **Conversa** (voz ou escrita, livre ou por cenário), **Progresso**
+(fases, estrelas, precisão, onde você mais erra) e **Ajustes** (voz, velocidade, microfone).
 
 ## Como a correção funciona
 
@@ -102,11 +117,10 @@ No **modo voz**, pontuação e grafia não contam como erro (quem pontua é o re
 
 ### Evolução progressiva
 
-- Cada frase gera **XP** conforme tamanho e precisão; o XP define o nível (A1 → A1+ → A2 → … → C1).
-- O nível **libera cenários** mais difíceis e frases mais longas nos treinos.
-- Todo erro corrigido entra num **deck de revisão espaçada** (caixas de 1, 3, 7, 16 e 35 dias):
-  o que você erra volta a aparecer até você acertar.
-- A aba Progresso mostra em qual **categoria** você erra mais e sugere a mini-lição do dia.
+- Cada fase concluída dá **estrelas** (1 a 3) e **XP**; a fase seguinte só abre com pelo menos 1 estrela.
+- O XP define o nível (A1 → A1+ → A2 → … → C1), que libera cenários mais difíceis na conversa livre.
+- Os erros viram cartões de revisão e voltam até você acertar.
+- A aba Progresso mostra em qual **categoria** você mais erra, com exemplos das suas frases.
 
 ---
 
@@ -140,32 +154,35 @@ node --test "tests/*.test.mjs"
 ```
 
 Os testes cobrem a morfologia (conjugação, comparativos, artigos), as correções por categoria,
-o modo voz, o alinhamento de palavras da pronúncia e — o mais importante — garantem que
-**frases corretas não são alteradas**.
+o modo voz, o alinhamento de palavras da pronúncia e a integridade das 50 fases. Dois deles são
+os mais importantes: **frases corretas não podem ser alteradas** e **toda resposta certa do
+conteúdo tem que passar limpa pelo próprio corretor** — foi assim que apareceram (e foram
+corrigidos) falsos positivos como "in the street" e "The kids play".
 
 ---
 
 ## Estrutura
 
 ```
-index.html              interface e abas
+index.html              casca do app (topo, conteúdo, barra de navegação)
 manifest.webmanifest    dados de instalação no celular (nome, ícone, cor)
 sw.js                   service worker: faz o app abrir offline
 icons/                  ícones do app
-css/styles.css          tema escuro
-js/app.js               abas, HUD (nível/XP/ofensiva), atalhos
-js/state.js             XP, níveis, ofensiva, histórico e revisão espaçada (localStorage)
+css/styles.css          tema preto/verde/branco
+js/app.js               navegação entre telas e topo (estrelas, ofensiva, nível)
+js/missions.js          as 50 fases (conteúdo de todos os itens)
+js/state.js             XP, estrelas, fases concluídas, ofensiva e revisão (localStorage)
 js/speech.js            reconhecimento de fala + síntese de voz
 js/corrector/
   rules.js              200+ regras de correção com explicação em português
   morphology.js         conjugação, plural, comparativos, artigos
   engine.js             aplica as regras, gera texto corrigido, diff e nota
-js/lessons.js           cenários, frases de pronúncia, ditados, temas de escrita
-js/tutor.js             tutor offline (respostas, mini-lições)
+js/lessons.js           cenários e temas da conversa livre
+js/tutor.js             respostas do tutor offline
 js/ai.js                cliente do modo IA
-js/views/               telas: conversa, treinos, progresso, ajustes
+js/views/               telas: mapa, fase, conversa, progresso, ajustes
 server/proxy.mjs        servidor local opcional (estáticos + API do tutor de IA)
-tests/                  testes do motor de correção
+tests/                  testes do corretor e do conteúdo das fases
 ```
 
 ## Privacidade

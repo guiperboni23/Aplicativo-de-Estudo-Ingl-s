@@ -16,6 +16,7 @@ const DEFAULTS = {
   days: {},              // '2026-09-12': { attempts, words, accuracySum, xp }
   errorCounts: {},       // ruleId -> { count, cat, why, ex, last, sample }
   cards: [],             // revisão espaçada
+  missions: {},          // id -> { stars, best, plays, at }
   log: [],               // últimas tentativas (máx. 200)
   settings: {
     asrLang: 'en-US',
@@ -230,6 +231,57 @@ export function gradeCard(id, ok) {
     }
     card.due = addDays(BOX_INTERVALS[card.box]);
   });
+}
+
+// ------------------------------------------------------------- missões ---
+
+/** Progresso de uma fase. A fase 1 está sempre liberada. */
+export function missionState(id) {
+  const done = state.missions[id] || { stars: 0, best: 0, plays: 0 };
+  const previous = id <= 1 ? null : state.missions[id - 1];
+  return {
+    ...done,
+    unlocked: id <= 1 || Boolean(previous && previous.stars > 0),
+    completed: done.stars > 0,
+  };
+}
+
+/** Primeira fase ainda não concluída — é onde o mapa abre. */
+export function currentMissionId(total = 50) {
+  for (let id = 1; id <= total; id++) {
+    if (!(state.missions[id]?.stars > 0)) return id;
+  }
+  return total;
+}
+
+/** Guarda o resultado de uma fase e devolve o que foi ganho. */
+export function completeMission(id, score, stars) {
+  const previous = state.missions[id];
+  const first = !previous || previous.stars === 0;
+  const improved = stars > (previous?.stars || 0);
+  const gained = stars > 0 ? (first ? 40 + stars * 15 : stars * 8) : 5;
+  update((s) => {
+    touchStreak(s);
+    const entry = s.missions[id] || { stars: 0, best: 0, plays: 0 };
+    entry.plays += 1;
+    entry.best = Math.max(entry.best, Math.round(score));
+    entry.stars = Math.max(entry.stars, stars);
+    entry.at = todayKey();
+    s.missions[id] = entry;
+    s.xp += gained;
+    const day = s.days[todayKey()] || { attempts: 0, words: 0, accuracySum: 0, xp: 0 };
+    day.xp += gained;
+    s.days[todayKey()] = day;
+  });
+  return { gained, first, improved, stars };
+}
+
+export function totalStars() {
+  return Object.values(state.missions).reduce((sum, x) => sum + (x.stars || 0), 0);
+}
+
+export function missionsDone() {
+  return Object.values(state.missions).filter((x) => x.stars > 0).length;
 }
 
 export function topErrors(limit = 6) {

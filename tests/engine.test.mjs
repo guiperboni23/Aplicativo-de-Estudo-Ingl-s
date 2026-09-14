@@ -70,6 +70,14 @@ test('verbo auxiliar e infinitivo com "to"', () => {
   corrige('she need study more', 'She needs to study more.');
 });
 
+test('passado: irregulares, auxiliares e condicional', () => {
+  corrige('She buyed a new car', 'She bought a new car.');
+  corrige("I didn't went to the party", "I didn't go to the party.");
+  corrige('Did you saw my message?', 'Did you see my message?');
+  corrige('If I would have time, I would travel.', 'If I had time, I would travel.');
+  corrige('I will call you when I will arrive.', 'I will call you when I arrive.');
+});
+
 test('negativas e perguntas', () => {
   corrige("I don't know nothing", "I don't know anything.");
   corrige('what means this word', 'What does this word mean?');
@@ -91,6 +99,11 @@ test('frases corretas não são alteradas', () => {
     'I need help with this report.',
     'She is studying for the test right now.',
     'I want to work abroad next year.',
+    'The kids play in the street every afternoon.',
+    'My parents live in another city.',
+    "I don't know when he will arrive.",
+    'Could you send me the numbers for last month?',
+    'The news is not good today.',
   ];
   for (const frase of corretas) {
     const r = analyze(frase);

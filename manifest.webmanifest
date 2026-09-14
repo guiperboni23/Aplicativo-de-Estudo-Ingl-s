@@ -1,14 +1,14 @@
 {
   "name": "Speak Up — inglês progressivo",
   "short_name": "Speak Up",
-  "description": "Treino de inglês com chat de voz, chat escrito, correção de erros e acompanhamento de evolução.",
+  "description": "Treino de inglês em 50 fases: falar, escrever, pronúncia e ditado, com correção na hora.",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0a0e1a",
-  "theme_color": "#0a0e1a",
+  "background_color": "#05070a",
+  "theme_color": "#05070a",
   "categories": ["education"],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },

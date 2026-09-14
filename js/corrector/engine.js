@@ -179,7 +179,9 @@ export function analyze(input, { mode = 'text' } = {}) {
   const FORMAT = new Set(['final-punctuation', 'sentence-case', 'lowercase-i', 'proper-noun-case']);
   const count = wordList(original).length;
   const weighted = unique.reduce((sum, it) => {
-    if (it.warn) return sum + it.sev * 0.4;
+    // Avisos (falso cognato, dica de uso) não tiram nota — são só um alerta.
+    // Português no meio da frase conta, porque aí a comunicação em inglês falhou.
+    if (it.warn) return sum + (it.cat === 'português no meio' ? 1.5 : 0);
     if (FORMAT.has(it.ruleId)) return sum + 0.5;
     return sum + it.sev;
   }, 0);

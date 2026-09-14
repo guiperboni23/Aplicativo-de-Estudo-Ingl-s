@@ -1,6 +1,6 @@
 // Service worker: deixa o app abrir offline e funcionar como aplicativo no celular.
 // Troque a versão quando mudar arquivos — isso limpa o cache antigo.
-const VERSION = 'speakup-v1';
+const VERSION = 'speakup-v3';
 
 const SHELL = [
   './',
@@ -17,8 +17,10 @@ const SHELL = [
   './js/corrector/engine.js',
   './js/corrector/rules.js',
   './js/corrector/morphology.js',
+  './js/missions.js',
   './js/views/conversation.js',
-  './js/views/drills.js',
+  './js/views/map.js',
+  './js/views/mission.js',
   './js/views/progress.js',
   './js/views/settings.js',
   './icons/icon.svg',

@@ -1,8 +1,8 @@
-// Ajustes: voz, velocidade, idioma do reconhecimento e modo IA opcional.
+// Ajustes: o mínimo necessário.
 
 import { esc } from '../utils.js';
 import { getState, setSetting } from '../state.js';
-import { englishVoices, onVoicesReady, speak, ttsSupported, asrSupported } from '../speech.js';
+import { englishVoices, onVoicesReady, speak, asrSupported } from '../speech.js';
 import { aiHealth } from '../ai.js';
 
 export function createSettingsView() {
@@ -10,81 +10,55 @@ export function createSettingsView() {
 
   function render() {
     const s = getState().settings;
-    const voices = englishVoices();
 
     root.innerHTML = `
-      <div class="card">
-        <h2>🔊 Voz e microfone</h2>
-        <div class="grid two">
+      <div class="screen stack">
+        <div class="card">
+          <h3 style="margin:0 0 12px">Voz</h3>
           <label class="field"><span>Voz do tutor</span>
             <select class="js-voice">
-              <option value="">(voz padrão do sistema)</option>
-              ${voices.map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === s.ttsVoice ? 'selected' : ''}>${esc(v.name)} — ${esc(v.lang)}</option>`).join('')}
+              <option value="">padrão do aparelho</option>
+              ${englishVoices().map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === s.ttsVoice ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}
             </select>
           </label>
-          <label class="field"><span>Sotaque do reconhecimento de fala</span>
+          <label class="field"><span>Velocidade: <b class="js-rate-val">${s.ttsRate.toFixed(2)}</b>×</span>
+            <input type="range" class="js-rate" min="0.55" max="1.25" step="0.05" value="${s.ttsRate}" />
+          </label>
+          <label class="row small" style="gap:8px">
+            <input type="checkbox" class="js-autospeak" ${s.autoSpeak ? 'checked' : ''} /> falar as respostas automaticamente
+          </label>
+          <button class="btn small js-test" style="margin-top:12px">testar voz</button>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 12px">Microfone</h3>
+          <label class="field"><span>Sotaque que o app espera ouvir</span>
             <select class="js-asr">
-              ${['en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IN'].map((l) => `<option value="${l}" ${l === s.asrLang ? 'selected' : ''}>${l}</option>`).join('')}
+              ${['en-US', 'en-GB', 'en-AU', 'en-CA'].map((l) => `<option value="${l}" ${l === s.asrLang ? 'selected' : ''}>${l}</option>`).join('')}
             </select>
           </label>
+          <p class="small muted" style="margin:0">
+            ${asrSupported() ? '✅ Este navegador escuta você.' : '❌ Este navegador não escuta. Use Chrome (Android) ou Safari (iPhone).'}
+          </p>
         </div>
-        <label class="field"><span>Velocidade da fala do tutor: <b class="js-rate-val">${s.ttsRate.toFixed(2)}</b>×</span>
-          <input type="range" class="js-rate" min="0.55" max="1.25" step="0.05" value="${s.ttsRate}" />
-        </label>
-        <div class="row">
-          <label class="row small" style="gap:6px">
-            <input type="checkbox" class="js-autospeak" ${s.autoSpeak ? 'checked' : ''} />
-            falar as respostas do tutor automaticamente
+
+        <details class="card">
+          <summary class="small muted">Tutor de IA (opcional)</summary>
+          <p class="small muted">Deixa as respostas mais naturais. Precisa do servidor local rodando.</p>
+          <label class="row small" style="gap:8px;margin:10px 0">
+            <input type="checkbox" class="js-ai" ${s.aiEnabled ? 'checked' : ''} /> usar quando disponível
           </label>
-          <button class="btn small js-test-voice">testar voz</button>
-        </div>
-        <p class="small muted" style="margin-top:10px">
-          Reconhecimento de fala: ${asrSupported() ? '✅ disponível' : '❌ não disponível neste navegador (use Chrome/Edge)'} ·
-          Voz sintetizada: ${ttsSupported() ? '✅ disponível' : '❌ não disponível'}
-        </p>
-      </div>
-
-      <div class="card">
-        <h2>🤖 Modo IA (opcional)</h2>
-        <p class="small muted">
-          Sem IA o app já corrige e conversa (tutor offline). Ligando o modo IA, as respostas ficam
-          mais naturais e as correções mais detalhadas. Para isso rode o servidor local
-          <code>node server/proxy.mjs</code> — sua chave da API fica no seu computador, nunca na página.
-        </p>
-        <label class="row small" style="gap:6px;margin:8px 0">
-          <input type="checkbox" class="js-ai" ${s.aiEnabled ? 'checked' : ''} /> usar o tutor de IA quando disponível
-        </label>
-        <label class="field"><span>Endereço do servidor</span>
-          <input type="text" class="js-endpoint" value="${esc(s.aiEndpoint)}" placeholder="http://localhost:8787" />
-        </label>
-        <div class="row">
-          <button class="btn js-test-ai">testar conexão</button>
-          <span class="small muted js-ai-status"></span>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>⌨️ Atalhos</h2>
-        <ul class="list small">
-          <li><kbd>1</kbd> … <kbd>4</kbd> — trocar de aba</li>
-          <li><kbd>Espaço</kbd> — ligar/desligar o microfone no chat de voz</li>
-          <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> — enviar no chat escrito</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h2>Como tirar mais do treino</h2>
-        <ul class="list small">
-          <li>Fale frases de 8 a 15 palavras: frases curtas não treinam estrutura.</li>
-          <li>Quando faltar a palavra, não troque para o português — diga <i>"How do you say ... in English?"</i>.</li>
-          <li>Depois de cada correção, repita a frase corrigida em voz alta uma vez.</li>
-          <li>Revise o deck de erros (aba Treinos) antes de começar uma conversa nova.</li>
-          <li>15 minutos por dia valem mais que 2 horas no fim de semana — a ofensiva 🔥 cuida disso.</li>
-        </ul>
+          <label class="field"><span>Endereço</span>
+            <input type="text" class="js-endpoint" value="${esc(s.aiEndpoint)}" />
+          </label>
+          <div class="row">
+            <button class="btn small js-test-ai">testar</button>
+            <span class="small muted js-ai-status"></span>
+          </div>
+        </details>
       </div>`;
 
-    const bind = (sel, event, handler) => root.querySelector(sel).addEventListener(event, handler);
-
+    const bind = (sel, ev, fn) => root.querySelector(sel).addEventListener(ev, fn);
     bind('.js-voice', 'change', (e) => setSetting('ttsVoice', e.target.value));
     bind('.js-asr', 'change', (e) => setSetting('asrLang', e.target.value));
     bind('.js-rate', 'input', (e) => {
@@ -93,11 +67,9 @@ export function createSettingsView() {
       setSetting('ttsRate', value);
     });
     bind('.js-autospeak', 'change', (e) => setSetting('autoSpeak', e.target.checked));
-    bind('.js-test-voice', 'click', () => {
+    bind('.js-test', 'click', () => {
       const cur = getState().settings;
-      speak('Hi Guilherme! This is how I sound. Let us practice your English today.', {
-        rate: cur.ttsRate, voiceURI: cur.ttsVoice,
-      });
+      speak('Hi Guilherme! Ready to practice your English today?', { rate: cur.ttsRate, voiceURI: cur.ttsVoice });
     });
     bind('.js-ai', 'change', (e) => setSetting('aiEnabled', e.target.checked));
     bind('.js-endpoint', 'change', (e) => setSetting('aiEndpoint', e.target.value.trim()));
@@ -106,23 +78,25 @@ export function createSettingsView() {
       status.textContent = 'testando…';
       try {
         const info = await aiHealth();
-        status.textContent = `✅ conectado (${info.model || 'modelo configurado'})`;
+        status.textContent = `✅ conectado (${info.model || 'ok'})`;
       } catch (err) {
-        status.textContent = `❌ ${err.message} — rode "node server/proxy.mjs" na pasta do projeto`;
+        status.textContent = `❌ ${err.message}`;
       }
     });
 
     onVoicesReady(() => {
-      if (!root.querySelector('.js-voice')) return;
+      const select = root.querySelector('.js-voice');
+      if (!select) return;
       const current = getState().settings.ttsVoice;
-      root.querySelector('.js-voice').innerHTML = `<option value="">(voz padrão do sistema)</option>${
-        englishVoices().map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === current ? 'selected' : ''}>${esc(v.name)} — ${esc(v.lang)}</option>`).join('')}`;
+      select.innerHTML = `<option value="">padrão do aparelho</option>${
+        englishVoices().map((v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === current ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}`;
     });
   }
 
   return {
     id: 'settings',
-    label: '⚙️ Ajustes',
+    label: 'Ajustes',
+    icon: '⚙️',
     mount(container) { root = container; render(); },
   };
 }

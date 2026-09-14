@@ -126,28 +126,3 @@ export function respond({ scenario, turnIndex = 0, userText = '', result = null 
     done: false,
   };
 }
-
-const LESSONS_BY_CAT = {
-  'concordância': 'Revise a regra do -s: he/she/it + verbo com -s no presente (he works, she studies). Na negativa, o -s vai para o auxiliar: he doesn\'t work.',
-  'tempo verbal': 'Escolha o tempo pelo marcador: yesterday/last week/ago → passado simples; since/for + agora → present perfect (have/has + particípio).',
-  'preposição': 'Preposições andam com o verbo, não com a tradução. Decore em bloco: listen TO, depend ON, married TO, arrive AT, good AT, interested IN.',
-  'verbo': 'Em inglês quase toda frase precisa de sujeito e de auxiliar na negativa/pergunta: "It is raining", "I don\'t know", "Does he work?".',
-  'artigo': 'Profissão no singular pede artigo (I am an engineer) e "an" vem antes de som de vogal (an hour, a university).',
-  'plural': 'Incontáveis não pluralizam: information, advice, money, furniture, feedback. Use "some", "a piece of", "a lot of".',
-  'vocabulário': 'Colocações resolvem metade dos erros: make a mistake, ask a question, make a decision, have a party, take a trip, earn money.',
-  'ordem das palavras': 'Pergunta em inglês = auxiliar + sujeito + verbo: "What does it mean?", "How can I help?".',
-  'comparativo': 'Adjetivo curto: -er / -est (cheaper, the biggest). Adjetivo longo: more / the most (more interesting).',
-  'ortografia': 'Leia em voz alta e escreva depois: because, receive, definitely, through, a lot, different, environment.',
-  'estilo': 'Contrações e pontuação deixam o texto natural: I\'m, don\'t, it\'s. Feche as frases com ponto ou interrogação.',
-  'falso cognato': 'Cuidado com falsos amigos: actually (na verdade), pretend (fingir), realize (perceber), push (empurrar), library (biblioteca).',
-  'português no meio': 'Quando faltar a palavra, não troque de idioma: use "How do you say ... in English?" ou descreva com outras palavras.',
-};
-
-/** Mini-lição em português baseada nos erros mais frequentes. */
-export function miniLesson(topErrors = []) {
-  if (!topErrors.length) {
-    return 'Sem erros recorrentes ainda. Fale frases mais longas para o tutor ter o que analisar.';
-  }
-  const cat = topErrors[0].cat;
-  return LESSONS_BY_CAT[cat] || `Foque em ${cat}: revise os exemplos nas suas correções recentes.`;
-}

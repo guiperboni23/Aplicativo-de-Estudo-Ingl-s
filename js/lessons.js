@@ -1,5 +1,5 @@
-// Conteúdo de estudo: cenários de conversa, frases de pronúncia,
-// ditados, temas de escrita e exercícios de correção.
+// Conteúdo da conversa livre: cenários e temas de escrita.
+// (Pronúncia, ditado e exercícios de correção agora vivem em js/missions.js.)
 
 export const SCENARIOS = [
   {
@@ -129,63 +129,6 @@ export const SCENARIOS = [
   },
 ];
 
-export const PRONUNCIATION = {
-  A1: [
-    'I would like a cup of coffee, please.',
-    'My name is Guilherme and I live in Brazil.',
-    'What time does the meeting start?',
-    'She works in a hospital downtown.',
-    'I usually wake up at six thirty.',
-    'This is the third time I try it.',
-    'Thank you for your help today.',
-  ],
-  A2: [
-    'I have been studying English for three months.',
-    'Could you repeat that a little more slowly, please?',
-    'The weather was really cold last weekend.',
-    'I think that thirty thousand is enough.',
-    'We should have left earlier this morning.',
-    'He asked me whether I wanted to join the call.',
-  ],
-  B1: [
-    'Although it was raining, we decided to walk to the restaurant.',
-    'I would rather work from home three days a week.',
-    'The team is responsible for testing and releasing the product.',
-    'She suggested rescheduling the meeting to Thursday afternoon.',
-    'Their thoughts were clearly worth considering.',
-  ],
-  B2: [
-    'If I had known about the deadline, I would have prepared differently.',
-    'The report highlights three significant risks that require attention.',
-    'We are gradually shifting our focus towards long-term growth.',
-  ],
-};
-
-export const DICTATION = {
-  A1: [
-    'I work in an office near my house.',
-    'She does not like cold weather.',
-    'They are going to travel next month.',
-    'How much does this shirt cost?',
-    'My brother and I play soccer on Sundays.',
-  ],
-  A2: [
-    'I have lived in this city since two thousand nineteen.',
-    'We were waiting for the bus when it started to rain.',
-    'He has already finished his homework.',
-    'You should drink more water during the day.',
-  ],
-  B1: [
-    'If I have time tomorrow, I will review the whole document.',
-    'The manager asked us to send the report by Friday morning.',
-    'She has been working on that project for almost a year.',
-  ],
-  B2: [
-    'Had we known the risks, we would have postponed the launch.',
-    'The proposal was rejected because it lacked financial details.',
-  ],
-};
-
 export const WRITING_PROMPTS = {
   A1: [
     'Escreva 3 frases sobre a sua rotina de manhã.',
@@ -210,28 +153,6 @@ export const WRITING_PROMPTS = {
     'Descreva uma decisão difícil que você tomou e o que aprendeu com ela.',
   ],
 };
-
-// Exercícios de "conserte a frase" usados quando ainda não há erros seus salvos.
-export const FIX_IT = [
-  { wrong: 'I have 30 years old.', right: 'I am 30 years old.', why: 'Idade usa o verbo "to be".' },
-  { wrong: 'He dont like pizza.', right: "He doesn't like pizza.", why: 'He/she/it usa "doesn\'t".' },
-  { wrong: 'Yesterday I go to the mall.', right: 'Yesterday I went to the mall.', why: '"Yesterday" pede passado.' },
-  { wrong: 'I am agree with you.', right: 'I agree with you.', why: '"Agree" já é verbo.' },
-  { wrong: 'She work in a bank.', right: 'She works in a bank.', why: '3ª pessoa recebe -s.' },
-  { wrong: 'I need informations about the course.', right: 'I need information about the course.', why: '"Information" é incontável.' },
-  { wrong: 'We discussed about the project.', right: 'We discussed the project.', why: '"Discuss" não leva "about".' },
-  { wrong: 'I live here since 2019.', right: 'I have lived here since 2019.', why: 'Since/for pede present perfect.' },
-  { wrong: 'Can you explain me this?', right: 'Can you explain this to me?', why: '"Explain" pede "to".' },
-  { wrong: 'There is many people here.', right: 'There are many people here.', why: 'Plural usa "there are".' },
-  { wrong: 'I am boring in this class.', right: 'I am bored in this class.', why: '-ed = como você se sente; -ing = como a coisa é.' },
-  { wrong: 'What means this word?', right: 'What does this word mean?', why: 'Perguntas precisam do auxiliar "does".' },
-  { wrong: 'I have a doubt about the exercise.', right: 'I have a question about the exercise.', why: '"Doubt" é desconfiança, não dúvida escolar.' },
-  { wrong: 'He is married with a doctor.', right: 'He is married to a doctor.', why: '"Married to".' },
-  { wrong: 'I go to home after work.', right: 'I go home after work.', why: '"Home" não leva "to".' },
-  { wrong: 'This exercise is more easy.', right: 'This exercise is easier.', why: 'Adjetivo curto: -er.' },
-  { wrong: 'My mother make a cake every Sunday.', right: 'My mother makes a cake every Sunday.', why: 'Sujeito singular: verbo com -s.' },
-  { wrong: 'I didn\'t went to the party.', right: "I didn't go to the party.", why: 'Depois de "didn\'t" o verbo fica na base.' },
-];
 
 const ORDER = ['A1', 'A2', 'B1', 'B2'];
 

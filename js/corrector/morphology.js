@@ -46,6 +46,21 @@ export function past(verb) {
   return `${v}ed`;
 }
 
+/** Passado irregular -> forma base (went -> go). */
+export const PAST_TO_BASE = Object.fromEntries(
+  Object.entries(PAST_IRREGULAR).map(([base, pastForm]) => [pastForm, base]),
+);
+
+/** Formas "regularizadas" erradas de verbos irregulares (buyed -> bought). */
+export const OVERREGULARIZED = Object.fromEntries(
+  Object.entries(PAST_IRREGULAR)
+    .filter(([base]) => !['be', 'cut', 'let', 'put', 'cost', 'read', 'learn'].includes(base))
+    .map(([base, pastForm]) => {
+      const wrong = /e$/.test(base) ? `${base}d` : /[^aeiou]y$/.test(base) ? `${base.slice(0, -1)}ied` : `${base}ed`;
+      return [wrong, pastForm];
+    }),
+);
+
 /** Particípio usado depois de have/has/had (aproximação útil para dicas). */
 const PARTICIPLE_IRREGULAR = {
   be: 'been', begin: 'begun', break: 'broken', choose: 'chosen', come: 'come',
